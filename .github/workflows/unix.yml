@@ -1,0 +1,123 @@
+name: Unix
+on:
+  pull_request:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+permissions:
+  contents: write
+jobs:
+  macos:
+    name: macOS arm64 PHP ${{ matrix.php }} NTS
+    # macos-latest is Apple Silicon (arm64).
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3', '8.4', '8.5']
+    steps:
+      - uses: actions/checkout@v5
+      - name: Setup PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2 (2.40.0)
+        with:
+          php-version: ${{ matrix.php }}
+        env:
+          phpts: nts
+      - name: Build and test
+        env:
+          NO_INTERACTION: '1'
+          REPORT_EXIT_STATUS: '1'
+        run: |
+          set -eu
+          phpize
+          ./configure --enable-tyhp
+          make
+          make test
+      - name: Build and upload
+        if: github.event_name == 'release'
+        uses: php/pie-ext-binary-builder@cbe134360897f23793f23c2edc7602261d205a25 # 0.0.4
+        with:
+          configure-flags: '--enable-tyhp'
+          release-tag: ${{ github.event.release.tag_name }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  linux:
+    name: Linux PHP ${{ matrix.php }} ${{ matrix.libc }} ${{ matrix.arch }} NTS
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    container: php:${{ matrix.php }}-${{ matrix.libc == 'musl' && 'cli-alpine' || 'cli' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3', '8.4', '8.5']
+        libc: [glibc, musl]
+        arch: [x64, arm64]
+    steps:
+      # GitHub refuses JavaScript actions in an Alpine arm64 container until
+      # this shell step installs a compatible loader. Other cells skip it.
+      - name: Alpine arm64 JavaScript actions
+        if: matrix.libc == 'musl' && matrix.arch == 'arm64'
+        uses: laverdet/alpine-arm64@7f0f72ee2f71eb2324e5888e8b6e42b1b53e6160 # v1
+      # Alpine deletes the compiler after building PHP. Debian images keep it.
+      - name: Install phpize dependencies
+        if: matrix.libc == 'musl'
+        run: apk add --no-cache $PHPIZE_DEPS
+      - uses: actions/checkout@v5
+      - name: Build and test
+        env:
+          NO_INTERACTION: '1'
+          REPORT_EXIT_STATUS: '1'
+        run: |
+          set -eu
+          phpize
+          ./configure --enable-tyhp
+          make
+          make test
+      # The builder calls jq and zip. On musl, ldd --version writes its banner
+      # to stderr, and the builder only reads stdout, so it would name the
+      # asset glibc. The wrapper copies that banner to stdout.
+      - name: Install builder tools
+        if: github.event_name == 'release'
+        run: |
+          set -eu
+          if [ -f /etc/alpine-release ]; then
+            apk add --no-cache jq zip
+            real=$(command -v ldd)
+            printf '%s\n' \
+              '#!/bin/sh' \
+              'if [ "$1" = "--version" ]; then' \
+              "  ${real} --version 2>&1" \
+              '  exit 0' \
+              'fi' \
+              "exec ${real} \"\$@\"" \
+              > /usr/local/bin/ldd
+            chmod +x /usr/local/bin/ldd
+          else
+            apt-get update
+            apt-get install -y --no-install-recommends jq zip
+            rm -rf /var/lib/apt/lists/*
+          fi
+      - name: Build and upload
+        if: github.event_name == 'release'
+        uses: php/pie-ext-binary-builder@cbe134360897f23793f23c2edc7602261d205a25 # 0.0.4
+        with:
+          configure-flags: '--enable-tyhp'
+          release-tag: ${{ github.event.release.tag_name }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  linux-zts:
+    name: Linux glibc x64 PHP 8.5 ZTS
+    runs-on: ubuntu-latest
+    container: php:8.5-zts
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build and test
+        env:
+          NO_INTERACTION: '1'
+          REPORT_EXIT_STATUS: '1'
+        run: |
+          set -eu
+          phpize
+          ./configure --enable-tyhp
+          make
+          make test

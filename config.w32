@@ -1,0 +1,9 @@
+// vim:ft=javascript
+
+ARG_ENABLE("tyhp", "enable tyhp support", "no");
+
+if (PHP_TYHP != "no") {
+	EXTENSION("tyhp", "src\\tyhp.c src\\type_is.c src\\type_parse.c src\\bind_cache.c src\\closure_tree.c src\\dns.c", true, "/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1");
+	ADD_FLAG("LIBS_TYHP", "ws2_32.lib");
+	ADD_FLAG("LIBS_TYHP", "dnsapi.lib");
+}

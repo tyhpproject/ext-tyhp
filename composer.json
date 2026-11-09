@@ -1,0 +1,15 @@
+{
+    "name": "tyhp/ext-tyhp",
+    "description": "Optional PHP extension for the Tyhp runtime.",
+    "type": "php-ext",
+    "license": "Apache-2.0",
+    "require": {
+        "php": ">=8.2"
+    },
+    "php-ext": {
+        "extension-name": "tyhp",
+        "support-zts": true,
+        "support-nts": true,
+        "download-url-method": ["pre-packaged-binary", "composer-default"]
+    }
+}
