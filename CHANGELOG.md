@@ -6,6 +6,10 @@ Notable changes to the optional `tyhp` PHP extension (`tyhp/ext-tyhp`). The form
 
 ## [0.1.0] - 2026-11-09
 
+### Fixed
+
+- The extension builds on PHP 8.2 and 8.3. Those versions ship `zend_iterators.h` with no include guard, so including it a second time failed the build.
+
 ### Added
 
 - The `tyhp` module, version `0.1.0`, for PHP 8.2 and newer. `extension_loaded('tyhp')` detects it and `phpversion('tyhp')` reads the version. No Tyhp package requires it. When it is absent, Tyhp keeps working, and `tyhp build` emits the same PHP.

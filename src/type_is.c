@@ -5,7 +5,8 @@
 #include "php.h"
 #include "zend_exceptions.h"
 #include "zend_interfaces.h"
-#include "zend_iterators.h"
+/* zend.h already includes zend_iterators.h. PHP 8.2 and 8.3 ship that
+ * header with no include guard, so a second include fails the build. */
 
 #include "php_tyhp.h"
 
