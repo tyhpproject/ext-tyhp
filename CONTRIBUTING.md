@@ -20,6 +20,12 @@ Tests are `.phpt` files in `tests/`.
 
 Windows and the rest of the matrix are the GitHub Actions workflows [`.github/workflows/windows.yml`](.github/workflows/windows.yml) and [`.github/workflows/unix.yml`](.github/workflows/unix.yml). Unix covers macOS arm64 (NTS, PHP 8.2–8.5), Linux glibc and musl on x64 and arm64 (NTS, PHP 8.2–8.5), and Linux glibc x64 ZTS on PHP 8.5. Windows covers PHP 8.2–8.5 on x64 and x86, NTS and ZTS, with opcache off and on. macOS x64 is not in that matrix.
 
+## Release
+
+Pushing `main` runs the tests. It does not create a GitHub Release.
+
+`scripts/release.sh` publishes the release for the version in `src/php_tyhp.h`. The tag is that version with no `v` prefix (`0.1.0`). PIE uses the tag text in the zip names. The Windows and Unix workflows attach those zips after the release is published. Move the `[Unreleased]` changelog entries under `## [X.Y.Z] - YYYY-MM-DD`, leave an empty `## [Unreleased]` above that, and commit before running the script.
+
 ## Pull requests
 
 - Target `main`.

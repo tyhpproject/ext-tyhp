@@ -4,6 +4,8 @@ Notable changes to the optional `tyhp` PHP extension (`tyhp/ext-tyhp`). The form
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-09
+
 ### Added
 
 - The `tyhp` module, version `0.1.0`, for PHP 8.2 and newer. `extension_loaded('tyhp')` detects it and `phpversion('tyhp')` reads the version. No Tyhp package requires it. When it is absent, Tyhp keeps working, and `tyhp build` emits the same PHP.
